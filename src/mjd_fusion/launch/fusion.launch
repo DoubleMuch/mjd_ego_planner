@@ -1,0 +1,10 @@
+<launch>
+    <!-- <node pkg="mjd_fusion" type="gps_tra_node" name="gps_tra_node" output="screen">
+    </node> -->
+    <node pkg="global_fusion" type="global_fusion_node" name="global_fusion_node" output="screen">
+    </node>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mjd_fusion)/config/fusion_node.rviz" required="true" /> 
+    <!-- <node pkg="vins" type="vins_node" name="vins_node" output="screen">
+    <rosparam file="$(find vins)/config/realsense_d435i/realsense_stereo_imu_config.yaml" command="load" />
+    </node> -->
+</launch>
