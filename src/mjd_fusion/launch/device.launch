@@ -1,6 +1,0 @@
-<launch>
-    <include file="$(find dji_sdk)/launch/sdk.launch">
-    </include>
-    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-    </include>
-</launch>
