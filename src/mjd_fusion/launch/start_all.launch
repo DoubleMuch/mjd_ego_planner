@@ -1,0 +1,10 @@
+<launch>
+    <include file="$(find mjd_fusion)/launch/fusion.launch">
+    </include>
+    <include file="$(find mjd_fusion)/launch/device.launch">
+    </include>
+
+    <!-- <node pkg="vins" type="vins_node" name="vins_node" output="screen">
+    <rosparam file="$(find vins)/config/realsense_d435i/realsense_stereo_imu_config.yaml" command="load" />
+    </node> -->
+</launch>
