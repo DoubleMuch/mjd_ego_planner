@@ -1,10 +1,17 @@
 # mjd_ego_planner
 
 
-<<<<<<< HEAD
-=======
-配置github
+·  git add -A  提交所有变化
+
+
+·  git add -u  提交被修改(modified)和被删除(deleted)文件，不包括新文件(new)
+
+
+·  git add .  提交新文件(new)和被修改(modified)文件，不包括被删除(deleted)文件
+
+
 本地仓库默认为master
+
 远程仓库为main
 同步本地仓库为main
 https://blog.csdn.net/qq_45531729/article/details/111668830
