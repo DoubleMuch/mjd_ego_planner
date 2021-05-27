@@ -46,6 +46,11 @@ git push -u origin master（分支名字）
 
 
 
+git pull origin main(最好先把本地的commit)
+
+ 
+
+# 配置onboardsdk 
 onboardsdk3.6  onboardsdk ros 3.6。0
 
 
@@ -66,6 +71,9 @@ make djiosdk-core
 
 sudo make install djiosdk-core
 
+
+
+# 配置cere
 
 ceres 
 
@@ -94,6 +102,9 @@ realsense2 missing
 参考  https://github.com/IntelRealSense/librealsense/blob/development/doc/distribution_linux.md
 
 
+
+# 配置运行
+
 rosrun global_fusion global_fusion_node 
 
 
@@ -102,6 +113,8 @@ rosrun vins vins_node /home/dji/tfes/src/VINS-Fusion/config/realsense_d435i/real
 
 rosrun global_fusion global_fusion_node 
 
+
+# 配置评估工具
 
 evo 配置的时候可能出现相关报错，可以通过注释相关代码解决
 
