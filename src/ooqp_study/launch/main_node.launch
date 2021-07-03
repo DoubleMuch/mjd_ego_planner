@@ -1,0 +1,21 @@
+<launch>
+    <!-- <rosparam param="waypoints" >[0,0,0, 
+                                0,10,0,
+                                10,10,0,
+                                10,0,0,
+                                10,-10,0,
+                                0,-10,0]</rosparam> -->
+    <rosparam param="waypoints" >[0,0,0, 
+                                0,5,1,
+                                1,10,1,
+                                5,15,0,
+                                5,10,0,
+                                
+                                ]</rosparam>
+    <rosparam param="time_stamp" >[0,2,3,4,6]</rosparam>
+    <!-- <rosparam param="time_stamp" >[0,3,6,9,12,15]</rosparam> -->
+    <node name="main" pkg = "ooqp_study" type = "main_node" output = "screen">
+    </node>
+</launch>
+
+<!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mjd_fusion)/config/fusion_node.rviz" required="true" />  -->
