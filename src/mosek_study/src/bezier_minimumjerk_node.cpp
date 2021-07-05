@@ -3,21 +3,21 @@ double calculatePos(double *coeff,double time_slot,double t_T)
 {
     double p= coeff[0]*pow(1-t_T,6)+6*coeff[1]*t_T*pow(1-t_T,5)+15*coeff[2]*pow(t_T,2)*pow(1-t_T,4)+20*coeff[3]*pow(t_T,3)*pow(1-t_T,3)+
             15*coeff[4]*pow(t_T,4)*pow(1-t_T,2)+6*coeff[5]*pow(t_T,5)*pow(1-t_T,1)+coeff[6]*pow(t_T,6);
-    p=p*time_slot*time_slot;
+    p=p*time_slot;
     return p;
 }
 double calculateVelocity(double *coeff,double time_slot,double t_T)
 {
     double p= (coeff[1]-coeff[0])*pow(1-t_T,5)+5*(coeff[2]-coeff[1])*pow(t_T,1)*pow(1-t_T,4)+10*(coeff[3]-coeff[2])*pow(t_T,2)*pow(1-t_T,3)
               +10*(coeff[4]-coeff[3])*pow(t_T,3)*pow(1-t_T,2)+5*(coeff[5]-coeff[4])*pow(t_T,4)*pow(1-t_T,1)+(coeff[6]-coeff[5])*pow(t_T,6);
-    p=p*6*time_slot;
+    p=p*6;
     return p;
 }
 double calculateAcc(double *coeff,double time_slot,double t_T)
 {
   double p= (coeff[2]-2*coeff[1]+coeff[0])*pow(1-t_T,4)+4*(coeff[3]-2*coeff[2]+coeff[1])*pow(t_T,1)*pow(1-t_T,3)+6*(coeff[4]-2*coeff[3]+coeff[2])*pow(t_T,2)*pow(1-t_T,2)
            +4*(coeff[5]-2*coeff[4]+coeff[3])*pow(t_T,3)*pow(1-t_T,1)+(coeff[6]-2*coeff[5]+coeff[4])*pow(t_T,4);
-  p=p*30;
+  p=p*30/time_slot;
   return p; 
 }
 int main(int argc ,char **argv){
@@ -88,6 +88,17 @@ int main(int argc ,char **argv){
     cin>>flag;
     for(int i=0;i<w.size();i++)
     {
+        double x= calculatePos(traj[i].x_ctr_point,time_slots[i],0/time_slots[i]);
+        double y= calculatePos(traj[i].y_ctr_point,time_slots[i],0/time_slots[i]);
+        double z= calculatePos(traj[i].z_ctr_point,time_slots[i],0/time_slots[i]);
+        if(i==w.size()-1)
+        {
+          x= calculatePos(traj[i-1].x_ctr_point,time_slots[i-1],1);
+          y= calculatePos(traj[i-1].y_ctr_point,time_slots[i-1],1);
+          z= calculatePos(traj[i-1].z_ctr_point,time_slots[i-1],1);
+          i++;
+        }
+        
         uint32_t shape = visualization_msgs::Marker::CUBE;
         visualization_msgs::Marker marker;
         // 设置帧 ID和时间戳
@@ -99,17 +110,17 @@ int main(int argc ,char **argv){
         // 设置标记行为：ADD（添 加），DELETE（删 除）
         //marker.action = visualization_msgs::Marker::ADD;
         //设置标记位姿。 
-        marker.pose.position.x = w[i].w_pos[0];
-        marker.pose.position.y = w[i].w_pos[1];
-        marker.pose.position.z = w[i].w_pos[2];
+        marker.pose.position.x = x;
+        marker.pose.position.y = y;
+        marker.pose.position.z = z;
         marker.pose.orientation.x = 0.0;
         marker.pose.orientation.y = 0.0;
         marker.pose.orientation.z = 0.0;
         marker.pose.orientation.w = 1.0;
         // 设置标记的比例，所有方向上尺度1表示1米
-        marker.scale.x = 0.2;
-        marker.scale.y = 0.2;
-        marker.scale.z = 0.2;
+        marker.scale.x = 0.1;
+        marker.scale.y = 0.1;
+        marker.scale.z = 0.1;
         //cout<<marker.pose.position.x<<" "<<marker.pose.position.y<<" "<<marker.pose.position.z<<endl;
         //设置标记颜色，确保alpha（不透明度）值不为0
         marker.color.r = 0.0f;
@@ -122,6 +133,7 @@ int main(int argc ,char **argv){
     }
     for(int j=0;j<(waypoint_num-1);j++)
     {
+       
         for(double i=0;i<time_slots[j];i=i+0.05)
         {
             geometry_msgs::PoseStamped this_pose_stamped;

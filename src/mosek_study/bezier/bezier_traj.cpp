@@ -10,14 +10,20 @@ void bezier_traj::waypoints_bezier_traj(vector<waypoint_info> waypoints,vector <
     int domin=3;   //x,y,z维度3
     int nx=jerk_n*domin*traj_num;   //总共的系数个数
     double R=0.4;
-    double L=0.3;
+    double L=0.2;
     double temp=sqrt(R*R-L*L)/L;
     cout<<"roll degree "<<acos(L/R)*180/M_PI<<endl;
     MSKrescodee  r;
-            //  首尾约束    中间航点位置约束     中间航点连续性约束     速度控制点约束                  加速度控制点约束
-    int NUMCON =18      +(traj_num-1)*3     +(traj_num-1)*3*3   +traj_num*(jerk_n-1)*3      +traj_num*(jerk_n-2)*3
-            //  窄点加速度约束      窄点速度约束
-                +1;//              +1  ;       /* Number of constraints.             */
+    /* Number of constraints.             */
+    int NUMCON =18                          //  首尾约束 
+                //+3
+                //+(traj_num-1)*3             //中间航点位置约束
+                +(traj_num-1)*3*3           //中间航点连续性约束
+                +traj_num*(jerk_n-1)*3      // 速度控制点约束
+                +traj_num*(jerk_n-2)*3      //加速度控制点约束
+                +1 ;                         //窄点加速度约束
+                //+1;                         //窄点速度约束
+                  
     int NUMVAR =7*3*traj_num;   /* Number of variables.               */
     int NUMANZ =0;   /* Number of non-zeros in A.          */
     int NUMQNZ =0;  /* Number of non-zeros in Q.          */
@@ -66,7 +72,7 @@ void bezier_traj::waypoints_bezier_traj(vector<waypoint_info> waypoints,vector <
     for(int i=0;i<3;i++)
     {
         // 起点位置 c0T0
-        matrixA[row_index][i*7]=time_slots[0]*time_slots[0];
+        matrixA[row_index][i*7]=time_slots[0];
         blc[row_index]=waypoints[0].w_pos[i]; buc[row_index]=waypoints[0].w_pos[i]; bkc[row_index]=MSK_BK_FX;        //waypoint_0
         row_index++;
         //起点速度6(c1-c0)
@@ -82,7 +88,7 @@ void bezier_traj::waypoints_bezier_traj(vector<waypoint_info> waypoints,vector <
     for(int i=0;i<3;i++)
     {
         // 终点位置 c6*Ttarj_num
-        matrixA[row_index][(traj_num-1)*21+i*7+6]=time_slots[traj_num-1]*time_slots[traj_num-1];
+        matrixA[row_index][(traj_num-1)*21+i*7+6]=time_slots[traj_num-1];
         blc[row_index]=waypoints[traj_num].w_pos[i]; buc[row_index]=waypoints[traj_num].w_pos[i]; bkc[row_index]=MSK_BK_FX;        //waypoint_end
         row_index++;
         //终点速度6(c6-c5)
@@ -102,33 +108,37 @@ void bezier_traj::waypoints_bezier_traj(vector<waypoint_info> waypoints,vector <
         for(int j=0;j<3;j++)
         {
             //位置坐标
-            matrixA[row_index][21*i+j*7+6]=time_slots[i]*time_slots[i];   //c0t0=p0
-            blc[row_index]=waypoints[i+1].w_pos[j];  
-            buc[row_index]=waypoints[i+1].w_pos[j];
-            bkc[row_index]=MSK_BK_FX;
-            row_index++;
+            // if(i==1)
+            // {
+            //     matrixA[row_index][21*i+j*7+6]=time_slots[i];   //c0t0=p0
+            //     blc[row_index]=waypoints[i+1].w_pos[j];  
+            //     buc[row_index]=waypoints[i+1].w_pos[j];
+            //     bkc[row_index]=MSK_BK_FX;
+            //     row_index++;
+            // }
+            
 
             //位置连续
-            matrixA[row_index][21*i+j*7+6]=time_slots[i]*time_slots[i];
-            matrixA[row_index][21*(i+1)+j*7]=-time_slots[i+1]*time_slots[i+1];
+            matrixA[row_index][21*i+j*7+6]=time_slots[i];
+            matrixA[row_index][21*(i+1)+j*7]=-time_slots[i+1];
             bkc[row_index]=MSK_BK_FX;
             row_index++;
 
             //速度连续
-            matrixA[row_index][21*i+j*7+6]=1*time_slots[i];
-            matrixA[row_index][21*i+j*7+5]=-1*time_slots[i];
-            matrixA[row_index][21*(i+1)+j*7+1]=-1*time_slots[i+1];
-            matrixA[row_index][21*(i+1)+j*7+0]=1*time_slots[i+1];
+            matrixA[row_index][21*i+j*7+6]=1;
+            matrixA[row_index][21*i+j*7+5]=-1;
+            matrixA[row_index][21*(i+1)+j*7+1]=-1;
+            matrixA[row_index][21*(i+1)+j*7+0]=1;
             bkc[row_index]=MSK_BK_FX;
             row_index++;
             
             //加速度连续
-            matrixA[row_index][21*i+j*7+6]=30;
-            matrixA[row_index][21*i+j*7+5]=-2*30;
-            matrixA[row_index][21*i+j*7+4]=30;
-            matrixA[row_index][21*(i+1)+j*7+2]=-30;
-            matrixA[row_index][21*(i+1)+j*7+1]=2*30;
-            matrixA[row_index][21*(i+1)+j*7+0]=-30;
+            matrixA[row_index][21*i+j*7+6]=30/time_slots[i];
+            matrixA[row_index][21*i+j*7+5]=-2*30/time_slots[i];
+            matrixA[row_index][21*i+j*7+4]=30/time_slots[i];
+            matrixA[row_index][21*(i+1)+j*7+2]=-30/time_slots[i+1];
+            matrixA[row_index][21*(i+1)+j*7+1]=2*30/time_slots[i+1];
+            matrixA[row_index][21*(i+1)+j*7+0]=-30/time_slots[i+1];
             bkc[row_index]=MSK_BK_FX;
             row_index++;
 
@@ -136,35 +146,35 @@ void bezier_traj::waypoints_bezier_traj(vector<waypoint_info> waypoints,vector <
         }
     }
     
-    double v_max=2;
-    double a_max=100000;
+    double v_max=1;
+    double a_max=6;
     //速度控制点动力学约束
     for(int i=0;i<traj_num;i++)
     {
         for(int j=0;j<3;j++)
         {
-            matrixA[row_index][i*21+j*7+1]=6*time_slots[i];
-            matrixA[row_index][i*21+j*7+0]=-6*time_slots[i];
+            matrixA[row_index][i*21+j*7+1]=6;
+            matrixA[row_index][i*21+j*7+0]=-6;
             blc[row_index]=-v_max; buc[row_index]=+v_max; bkc[row_index]=MSK_BK_RA;row_index++; //速度贝塞尔曲线的控制点约束范围，速度贝塞尔曲线有6个控制点，
 
-            matrixA[row_index][i*21+j*7+2]=6*time_slots[i];
-            matrixA[row_index][i*21+j*7+1]=-6*time_slots[i];
+            matrixA[row_index][i*21+j*7+2]=6;
+            matrixA[row_index][i*21+j*7+1]=-6;
             blc[row_index]=-v_max; buc[row_index]=+v_max; bkc[row_index]=MSK_BK_RA;row_index++; 
 
-            matrixA[row_index][i*21+j*7+3]=6*time_slots[i];
-            matrixA[row_index][i*21+j*7+2]=-6*time_slots[i];
+            matrixA[row_index][i*21+j*7+3]=6;
+            matrixA[row_index][i*21+j*7+2]=-6;
             blc[row_index]=-v_max; buc[row_index]=+v_max; bkc[row_index]=MSK_BK_RA;row_index++; 
 
-            matrixA[row_index][i*21+j*7+4]=6*time_slots[i];
-            matrixA[row_index][i*21+j*7+3]=-6*time_slots[i];
+            matrixA[row_index][i*21+j*7+4]=6;
+            matrixA[row_index][i*21+j*7+3]=-6;
             blc[row_index]=-v_max; buc[row_index]=+v_max; bkc[row_index]=MSK_BK_RA;row_index++; 
 
-            matrixA[row_index][i*21+j*7+5]=6*time_slots[i];
-            matrixA[row_index][i*21+j*7+4]=-6*time_slots[i];
+            matrixA[row_index][i*21+j*7+5]=6;
+            matrixA[row_index][i*21+j*7+4]=-6;
             blc[row_index]=-v_max; buc[row_index]=+v_max; bkc[row_index]=MSK_BK_RA;row_index++; 
     
-            matrixA[row_index][i*21+j*7+6]=6*time_slots[i];
-            matrixA[row_index][i*21+j*7+5]=-6*time_slots[i];
+            matrixA[row_index][i*21+j*7+6]=6;
+            matrixA[row_index][i*21+j*7+5]=-6;
             blc[row_index]=-v_max; buc[row_index]=+v_max; bkc[row_index]=MSK_BK_RA;row_index++; 
 
             NUMANZ+=12;
@@ -174,41 +184,41 @@ void bezier_traj::waypoints_bezier_traj(vector<waypoint_info> waypoints,vector <
     {
         for(int j=0;j<3;j++)
         {
-            matrixA[row_index][i*21+j*7+2]=30;
-            matrixA[row_index][i*21+j*7+1]=-60;
-            matrixA[row_index][i*21+j*7+0]=30;
+            matrixA[row_index][i*21+j*7+2]=30/time_slots[i];
+            matrixA[row_index][i*21+j*7+1]=-60/time_slots[i];
+            matrixA[row_index][i*21+j*7+0]=30/time_slots[i];
             blc[row_index]=-a_max; buc[row_index]=+a_max; bkc[row_index]=MSK_BK_RA;
             if(j==2)
                 blc[row_index]=-g;
             row_index++; //加速度贝塞尔曲线的控制点约束范围，加速度贝塞尔曲线有5个控制点，
             
-            matrixA[row_index][i*21+j*7+3]=30;
-            matrixA[row_index][i*21+j*7+2]=-60;
-            matrixA[row_index][i*21+j*7+1]=30;
+            matrixA[row_index][i*21+j*7+3]=30/time_slots[i];
+            matrixA[row_index][i*21+j*7+2]=-60/time_slots[i];
+            matrixA[row_index][i*21+j*7+1]=30/time_slots[i];
             blc[row_index]=-a_max; buc[row_index]=+a_max; bkc[row_index]=MSK_BK_RA;
             if(j==2)
                 blc[row_index]=-g;
             row_index++;
 
-            matrixA[row_index][i*21+j*7+4]=30;
-            matrixA[row_index][i*21+j*7+3]=-60;
-            matrixA[row_index][i*21+j*7+2]=30;
+            matrixA[row_index][i*21+j*7+4]=30/time_slots[i];
+            matrixA[row_index][i*21+j*7+3]=-60/time_slots[i];
+            matrixA[row_index][i*21+j*7+2]=30/time_slots[i];
             blc[row_index]=-a_max; buc[row_index]=+a_max; bkc[row_index]=MSK_BK_RA;
             if(j==2)
                 blc[row_index]=-g;
             row_index++;
         
-            matrixA[row_index][i*21+j*7+5]=30;
-            matrixA[row_index][i*21+j*7+4]=-60;
-            matrixA[row_index][i*21+j*7+3]=30;
+            matrixA[row_index][i*21+j*7+5]=30/time_slots[i];
+            matrixA[row_index][i*21+j*7+4]=-60/time_slots[i];
+            matrixA[row_index][i*21+j*7+3]=30/time_slots[i];
             blc[row_index]=-a_max; buc[row_index]=+a_max; bkc[row_index]=MSK_BK_RA;
             if(j==2)
                 blc[row_index]=-g;
             row_index++;
 
-            matrixA[row_index][i*21+j*7+6]=30;
-            matrixA[row_index][i*21+j*7+5]=-60;
-            matrixA[row_index][i*21+j*7+4]=30;
+            matrixA[row_index][i*21+j*7+6]=30/time_slots[i];
+            matrixA[row_index][i*21+j*7+5]=-60/time_slots[i];
+            matrixA[row_index][i*21+j*7+4]=30/time_slots[i];
             blc[row_index]=-a_max; buc[row_index]=+a_max; bkc[row_index]=MSK_BK_RA;
             if(j==2)
                 blc[row_index]=-g;
@@ -219,14 +229,14 @@ void bezier_traj::waypoints_bezier_traj(vector<waypoint_info> waypoints,vector <
     }
 
     //狭窄航点的滚转角姿态约束转换到加速度上
-    int narrow_index=1;         //狭窄航点的下标
+    int narrow_index=2;         //狭窄航点的下标
     matrixA[row_index][narrow_index*21+2]=1;
     matrixA[row_index][narrow_index*21+1]=-2;
     matrixA[row_index][narrow_index*21+0]=1;
     matrixA[row_index][narrow_index*21+7*2+2]=-temp;
     matrixA[row_index][narrow_index*21+7*2+1]=2*temp;
     matrixA[row_index][narrow_index*21+7*2+0]=-temp;
-    blc[row_index]=temp*g/30; buc[row_index]=+MSK_INFINITY; bkc[row_index]=MSK_BK_LO;row_index++;
+    blc[row_index]=time_slots[narrow_index]*temp*g/30; buc[row_index]=+MSK_INFINITY; bkc[row_index]=MSK_BK_LO;row_index++;
 
     // //狭窄航点的水平速度约束
     // matrixA[row_index][narrow_index*21+1]=6;
@@ -287,7 +297,7 @@ void bezier_traj::waypoints_bezier_traj(vector<waypoint_info> waypoints,vector <
                 {
                     qsubi[matrixQ_nz]=traj_i*21+dim_i*7+row;
                     qsubj[matrixQ_nz]=traj_i*21+dim_i*7+col;
-                    qval[matrixQ_nz]=matrixQ(row,col)/pow(time_slots[traj_i],1);
+                    qval[matrixQ_nz]=matrixQ(row,col)/pow(time_slots[traj_i],3);
                     matrixQ_nz++;
                 }
             }
