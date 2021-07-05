@@ -3,21 +3,21 @@ double calculatePos(double *coeff,double time_slot,double t_T)
 {
     double p= coeff[0]*pow(1-t_T,6)+6*coeff[1]*t_T*pow(1-t_T,5)+15*coeff[2]*pow(t_T,2)*pow(1-t_T,4)+20*coeff[3]*pow(t_T,3)*pow(1-t_T,3)+
             15*coeff[4]*pow(t_T,4)*pow(1-t_T,2)+6*coeff[5]*pow(t_T,5)*pow(1-t_T,1)+coeff[6]*pow(t_T,6);
-    p=p*time_slot;
+    p=p*time_slot*time_slot;
     return p;
 }
 double calculateVelocity(double *coeff,double time_slot,double t_T)
 {
     double p= (coeff[1]-coeff[0])*pow(1-t_T,5)+5*(coeff[2]-coeff[1])*pow(t_T,1)*pow(1-t_T,4)+10*(coeff[3]-coeff[2])*pow(t_T,2)*pow(1-t_T,3)
               +10*(coeff[4]-coeff[3])*pow(t_T,3)*pow(1-t_T,2)+5*(coeff[5]-coeff[4])*pow(t_T,4)*pow(1-t_T,1)+(coeff[6]-coeff[5])*pow(t_T,6);
-    p=p*6;
+    p=p*6*time_slot;
     return p;
 }
 double calculateAcc(double *coeff,double time_slot,double t_T)
 {
   double p= (coeff[2]-2*coeff[1]+coeff[0])*pow(1-t_T,4)+4*(coeff[3]-2*coeff[2]+coeff[1])*pow(t_T,1)*pow(1-t_T,3)+6*(coeff[4]-2*coeff[3]+coeff[2])*pow(t_T,2)*pow(1-t_T,2)
            +4*(coeff[5]-2*coeff[4]+coeff[3])*pow(t_T,3)*pow(1-t_T,1)+(coeff[6]-2*coeff[5]+coeff[4])*pow(t_T,4);
-  p=p*30/time_slot;
+  p=p*30;
   return p; 
 }
 int main(int argc ,char **argv){
@@ -77,6 +77,7 @@ int main(int argc ,char **argv){
     if(flag==0)
     {
       cout<<" flag=0 No Sloution!!!"<<endl;
+      return 0;
     }
     
     ros::Publisher path_pub = ph.advertise<nav_msgs::Path>("bezier_path", 1);
